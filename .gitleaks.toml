@@ -1,0 +1,14 @@
+# Default rules plus one for provider-style API keys, so a pasted key fails CI even in a form the defaults miss.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "provider-api-key"
+description = "A string shaped like an AI provider API key"
+regex = '''\bsk-(?:proj-|live-)?[A-Za-z0-9_-]{24,}\b'''
+keywords = ["sk-"]
+
+[allowlist]
+description = "Documented placeholders and build output"
+regexes = ['''replace_with_[A-Za-z0-9_]*''']
+paths = ['''package-lock\.json''', '''src/api/schema\.d\.ts''', '''contracts/openapi\.json''']

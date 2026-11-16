@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run build
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Fails the build on any high or critical advisory.
+      - run: npm audit --audit-level=high
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Scans the whole history with the default rules plus .gitleaks.toml; a finding fails the build.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  image:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t learnflow-client:ci .
+      - name: The image runs as a non-root user
+        run: test "$(docker run --rm --entrypoint id learnflow-client:ci -u)" != "0"
+      - name: The bundle contains no secret-looking values
+        run: |
+          docker run --rm --entrypoint sh learnflow-client:ci -c '
+            ! grep -rEl "(sk-[A-Za-z0-9_-]{20,}|OPENAI_API_KEY|SESSION_SECRET|DATABASE_URL|BEGIN (RSA |EC )?PRIVATE KEY)" /srv'

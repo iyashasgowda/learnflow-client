@@ -1,0 +1,5565 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LearnFlow API",
+    "version": "0.1.0",
+    "description": "Every non-2xx response is JSON shaped as ErrorEnvelope: { code, message, details? }. All routes are served under /api."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "lf_session",
+        "description": "HttpOnly session cookie set by register and login."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "ai": {
+            "type": "object",
+            "properties": {
+              "configured": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "configured"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "ai"
+        ]
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "up"
+            ]
+          },
+          "redis": {
+            "type": "string",
+            "enum": [
+              "up"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ]
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "example": "The request is invalid."
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "aiDisclosureAcknowledged": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "emailVerified",
+          "aiDisclosureAcknowledged",
+          "createdAt"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "acceptTerms"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "TaskListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ]
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "completed"
+            ]
+          },
+          "overdue": {
+            "type": "boolean",
+            "description": "True for active tasks due before today (UTC)."
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "dueDate",
+          "priority",
+          "status",
+          "overdue",
+          "completedAt",
+          "version",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2030-03-15"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The version the edit is based on; a stale version gives 409."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2030-03-15"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "active": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "overdue": {
+                "type": "integer"
+              },
+              "completionRate": {
+                "type": "integer",
+                "description": "Whole percent of tasks completed; 0 when there are no tasks."
+              }
+            },
+            "required": [
+              "total",
+              "active",
+              "completed",
+              "overdue",
+              "completionRate"
+            ]
+          }
+        },
+        "required": [
+          "tasks"
+        ]
+      },
+      "MaterialListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Material"
+            }
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "maxUploadBytes": {
+                "type": "integer",
+                "description": "The largest file the server accepts, so clients can check before sending."
+              }
+            },
+            "required": [
+              "maxUploadBytes"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "limits"
+        ]
+      },
+      "Material": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "txt",
+              "md",
+              "pdf",
+              "docx"
+            ]
+          },
+          "sizeBytes": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "failureReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why processing failed; null unless the status is failed."
+          },
+          "charCount": {
+            "type": "integer",
+            "description": "Characters of extracted text that were kept."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the document was longer than the limit and only charCount characters were kept."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "fileType",
+          "sizeBytes",
+          "status",
+          "failureReason",
+          "charCount",
+          "truncated",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UploadMaterialRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The study file: .txt, .md, .pdf, or .docx."
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "Summary": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The summary, written in Markdown."
+          },
+          "model": {
+            "type": "string",
+            "description": "The model that wrote it."
+          },
+          "sectionCount": {
+            "type": "integer",
+            "description": "How many sections of the document were read; 1 means it fitted a single request."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the material was cut during extraction, so the summary covers only the stored part."
+          },
+          "sourceChars": {
+            "type": "integer",
+            "description": "Characters of the material the summary was written from."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "materialId",
+          "text",
+          "model",
+          "sectionCount",
+          "truncated",
+          "sourceChars",
+          "createdAt"
+        ]
+      },
+      "ConversationListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateConversationRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      },
+      "RenameConversationRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "MessageListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Set on user messages; send it again to retry the same message."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "content",
+          "idempotencyKey",
+          "createdAt"
+        ]
+      },
+      "SendMessageResponse": {
+        "type": "object",
+        "properties": {
+          "userMessage": {
+            "$ref": "#/components/schemas/Message"
+          },
+          "assistantMessage": {
+            "$ref": "#/components/schemas/Message"
+          }
+        },
+        "required": [
+          "userMessage",
+          "assistantMessage"
+        ]
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "A fresh random value per message. Reuse it only to retry that same message."
+          }
+        },
+        "required": [
+          "content",
+          "idempotencyKey"
+        ]
+      },
+      "Quiz": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "topic",
+              "material"
+            ]
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "materialId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null for a topic quiz, or when the material was deleted later."
+          },
+          "materialName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "questionCount": {
+            "type": "integer"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "multiple_choice",
+                "true_false",
+                "short_answer"
+              ]
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "sourceChars": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Characters of the material the questions were written from."
+          },
+          "sourcePartial": {
+            "type": "boolean",
+            "description": "True when the material is longer than what was used, so the quiz covers only its leading part."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizQuestion"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "source",
+          "topic",
+          "materialId",
+          "materialName",
+          "difficulty",
+          "questionCount",
+          "types",
+          "model",
+          "sourceChars",
+          "sourcePartial",
+          "createdAt",
+          "questions"
+        ]
+      },
+      "QuizQuestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "multiple_choice",
+              "true_false",
+              "short_answer"
+            ]
+          },
+          "statement": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The choices, for multiple_choice questions only."
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "statement"
+        ],
+        "description": "A question as shown before submitting: it never includes the answer."
+      },
+      "CreateQuizRequest": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "materialId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 36
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "multiple_choice",
+                "true_false",
+                "short_answer"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "difficulty",
+          "count",
+          "types"
+        ],
+        "description": "Give exactly one of topic and materialId."
+      },
+      "QuizListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizSummary"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "QuizSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "topic",
+              "material"
+            ]
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "materialId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null for a topic quiz, or when the material was deleted later."
+          },
+          "materialName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "questionCount": {
+            "type": "integer"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "multiple_choice",
+                "true_false",
+                "short_answer"
+              ]
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "sourceChars": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Characters of the material the questions were written from."
+          },
+          "sourcePartial": {
+            "type": "boolean",
+            "description": "True when the material is longer than what was used, so the quiz covers only its leading part."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attemptCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "source",
+          "topic",
+          "materialId",
+          "materialName",
+          "difficulty",
+          "questionCount",
+          "types",
+          "model",
+          "sourceChars",
+          "sourcePartial",
+          "createdAt",
+          "attemptCount"
+        ]
+      },
+      "Attempt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quizId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "submitted"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Questions answered correctly; null until submitted."
+          },
+          "total": {
+            "type": "integer"
+          },
+          "percent": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The score as a whole percentage; null until submitted."
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "questionId": {
+                  "type": "string"
+                },
+                "answer": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "description": "multiple_choice: the index of the chosen option; true_false: true or false; short_answer: the text."
+                }
+              },
+              "required": [
+                "questionId",
+                "answer"
+              ]
+            },
+            "description": "The answers given so far (unanswered questions are absent)."
+          },
+          "results": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/QuizResult"
+            },
+            "description": "Correct answers and explanations; null until the attempt is submitted."
+          }
+        },
+        "required": [
+          "id",
+          "quizId",
+          "status",
+          "startedAt",
+          "submittedAt",
+          "score",
+          "total",
+          "percent",
+          "answers",
+          "results"
+        ]
+      },
+      "QuizResult": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "multiple_choice",
+              "true_false",
+              "short_answer"
+            ]
+          },
+          "statement": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the question was left unanswered."
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "correctAnswer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "multiple_choice: the correct option index; true_false: the correct value; short_answer: the accepted answers."
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "aiReview": {
+            "$ref": "#/components/schemas/AiReview"
+          }
+        },
+        "required": [
+          "questionId",
+          "type",
+          "statement",
+          "answer",
+          "correct",
+          "correctAnswer",
+          "explanation",
+          "aiReview"
+        ]
+      },
+      "AiReview": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "acceptable",
+              "not_acceptable"
+            ]
+          },
+          "feedback": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "feedback"
+        ],
+        "description": "Judged by AI. It never changes the score."
+      },
+      "AttemptListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttemptSummary"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AttemptSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quizId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "submitted"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Questions answered correctly; null until submitted."
+          },
+          "total": {
+            "type": "integer"
+          },
+          "percent": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The score as a whole percentage; null until submitted."
+          }
+        },
+        "required": [
+          "id",
+          "quizId",
+          "status",
+          "startedAt",
+          "submittedAt",
+          "score",
+          "total",
+          "percent"
+        ]
+      },
+      "SaveAnswersRequest": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnswerInput"
+            },
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "answers"
+        ]
+      },
+      "AnswerInput": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 36
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null clears the answer."
+          }
+        },
+        "required": [
+          "questionId",
+          "answer"
+        ]
+      },
+      "SubmitAttemptRequest": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnswerInput"
+            },
+            "maxItems": 20,
+            "description": "Final answers, saved before scoring."
+          }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          },
+          "timeZone": {
+            "type": "string",
+            "example": "Europe/Paris",
+            "description": "An IANA time zone name."
+          },
+          "weekStart": {
+            "type": "string",
+            "enum": [
+              "monday",
+              "sunday",
+              "saturday"
+            ]
+          },
+          "saved": {
+            "type": "boolean",
+            "description": "False until the user saves a setting; the values are then the defaults."
+          }
+        },
+        "required": [
+          "theme",
+          "timeZone",
+          "weekStart",
+          "saved"
+        ]
+      },
+      "UpdateSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          },
+          "timeZone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "weekStart": {
+            "type": "string",
+            "enum": [
+              "monday",
+              "sunday",
+              "saturday"
+            ]
+          }
+        }
+      },
+      "StudySessionListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudySession"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "StudySession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "A UTC instant; show it in the user's time zone."
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "materialId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "startsAt",
+          "endsAt",
+          "materialId",
+          "taskId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateSessionRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "An ISO 8601 instant with a time zone designator (Z or an offset)."
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "After the start, and at most 12 hours later."
+          },
+          "materialId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 36
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 36
+          }
+        },
+        "required": [
+          "title",
+          "startsAt",
+          "endsAt"
+        ]
+      },
+      "UpdateSessionRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "materialId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 36
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 36
+          }
+        }
+      },
+      "Analytics": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "enum": [
+              "7d",
+              "30d",
+              "90d"
+            ]
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "description": "First day of the range (YYYY-MM-DD) in the user's time zone."
+          },
+          "to": {
+            "type": "string",
+            "description": "Last day of the range, today, in the user's time zone."
+          },
+          "tasks": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "activeInRange": {
+                "type": "integer",
+                "description": "Tasks that existed and were not yet completed at some moment of the range."
+              },
+              "completionRate": {
+                "type": "integer",
+                "description": "Whole percent: completed divided by activeInRange; 0 when activeInRange is 0."
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "created": {
+                      "type": "integer"
+                    },
+                    "completed": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "created",
+                    "completed"
+                  ]
+                },
+                "description": "One entry per day of the range, zero-filled."
+              }
+            },
+            "required": [
+              "created",
+              "completed",
+              "activeInRange",
+              "completionRate",
+              "series"
+            ]
+          },
+          "quizzes": {
+            "type": "object",
+            "properties": {
+              "attempts": {
+                "type": "integer"
+              },
+              "quizzes": {
+                "type": "integer"
+              },
+              "averageScorePercent": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Null when no attempt was submitted in the range."
+              },
+              "trend": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attemptId": {
+                      "type": "string"
+                    },
+                    "quizId": {
+                      "type": "string"
+                    },
+                    "quizTitle": {
+                      "type": "string"
+                    },
+                    "submittedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "scorePercent": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "attemptId",
+                    "quizId",
+                    "quizTitle",
+                    "submittedAt",
+                    "scorePercent"
+                  ]
+                },
+                "description": "Submitted attempts only, oldest first."
+              }
+            },
+            "required": [
+              "attempts",
+              "quizzes",
+              "averageScorePercent",
+              "trend"
+            ]
+          },
+          "study": {
+            "type": "object",
+            "properties": {
+              "totalMinutes": {
+                "type": "integer"
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "minutes": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "minutes"
+                  ]
+                },
+                "description": "One entry per day of the range, zero-filled."
+              }
+            },
+            "required": [
+              "totalMinutes",
+              "series"
+            ]
+          }
+        },
+        "required": [
+          "range",
+          "timeZone",
+          "from",
+          "to",
+          "tasks",
+          "quizzes",
+          "study"
+        ]
+      },
+      "ActivityListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "task_completed",
+                    "quiz_submitted",
+                    "material_uploaded",
+                    "session_scheduled"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "detail": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "A quiz score, or the start of a scheduled session."
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "title",
+                "at",
+                "detail"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Liveness check",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "The server is running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "summary": "Readiness check including the database and, when configured, the shared rate-limit store",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "The database (and Redis, when configured) is reachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database (DATABASE_UNAVAILABLE) or the shared rate-limit store (REDIS_UNAVAILABLE) is not reachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/openapi.json": {
+      "get": {
+        "summary": "This OpenAPI document (served outside production)",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "The OpenAPI document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not served in production.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Create an account and sign in",
+        "description": "The request must set acceptTerms to true (the Terms of Service and Privacy Policy). The acceptance and its time are stored.",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created. A session cookie is set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed (for example a password shorter than 10 characters, or the Terms and Privacy Policy not accepted). No account is created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An account with this email already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many registration attempts. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Sign in with email and password",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in. A session cookie is set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Incorrect email or password (identical for unknown emails).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "End the current session (no-op without one)",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out. The session cookie is cleared."
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "The signed-in user",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "summary": "Confirm an email address with the emailed token",
+        "tags": [
+          "account"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The address is verified. The token cannot be used again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The token is invalid, expired, or already used (code INVALID_TOKEN).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify/resend": {
+      "post": {
+        "summary": "Send a new verification email",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A new email was sent; earlier links stop working.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The address is already verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The email could not be sent (code MAIL_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/forgot": {
+      "post": {
+        "summary": "Request a password reset email",
+        "description": "Answers identically whether or not the address has an account.",
+        "tags": [
+          "account"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "If the address has an account, a reset email is on its way.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this address or IP. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset": {
+      "post": {
+        "summary": "Set a new password with the emailed token",
+        "description": "Ends every session of the account.",
+        "tags": [
+          "account"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed and all sessions ended."
+          },
+          "400": {
+            "description": "Validation failed, or the token is invalid, expired, or already used.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "summary": "Change the password of the signed-in user",
+        "description": "Ends every other session of the account.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed; other sessions ended."
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session, or the current password is wrong (code INVALID_PASSWORD).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many wrong passwords. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/ai-disclosure": {
+      "post": {
+        "summary": "Record that the user has read the AI data disclosure",
+        "description": "Chat messages and document text are sent to a third-party AI provider. The first acknowledgement time is kept; repeating the call changes nothing.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Acknowledged."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account": {
+      "delete": {
+        "summary": "Permanently delete the account and all of its data",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Account deleted and the session cookie cleared."
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session, or the password is wrong (code INVALID_PASSWORD).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many wrong passwords. See the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "summary": "List the signed-in user's tasks",
+        "description": "Filtering, sorting, and paging happen on the server. Every ordering ends with the task id, so ties keep the same order on every request. Default order: created newest first, due soonest first (tasks without a date last), priority high first.",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "active",
+                "completed"
+              ],
+              "default": "all"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "created",
+                "due",
+                "priority"
+              ],
+              "default": "created"
+            },
+            "required": false,
+            "name": "sort",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "required": false,
+            "name": "order",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a task",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new, active task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, for example a blank title.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/{id}": {
+      "get": {
+        "summary": "Get one task",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Task id"
+            },
+            "required": true,
+            "description": "Task id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit a task, or complete or reopen it",
+        "description": "Send the version the edit is based on. If the task has changed since, the answer is 409 VERSION_CONFLICT with the current task in details.task.",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Task id"
+            },
+            "required": true,
+            "description": "Task id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated task with its version advanced.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The task changed since the supplied version (code VERSION_CONFLICT).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Task id"
+            },
+            "required": true,
+            "description": "Task id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The task was deleted."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/summary": {
+      "get": {
+        "summary": "Task counts and completion rate for the dashboard",
+        "tags": [
+          "dashboard"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Counts derived from the same data as the task list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/materials": {
+      "get": {
+        "summary": "List the signed-in user's materials, newest first",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All materials, including failed ones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload a study file",
+        "description": "Send one file in the \"file\" field as multipart/form-data. The request returns once the text has been extracted. A file that is accepted but cannot be read (corrupt, scanned PDF, too slow) is still created, with status failed and a failureReason. A rejected file (wrong type, empty, too large) creates nothing. Only one upload per user is processed at a time.",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadMaterialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The material, ready or failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Material"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file attached, or the file is empty (code EMPTY_FILE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The file is larger than the configured limit (MAX_UPLOAD_MB).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported type, content that does not match the extension, or a text file that is not UTF-8.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Another upload by this user is still being processed (code UPLOAD_IN_PROGRESS), or too many uploads were started (RATE_LIMITED, with Retry-After).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The shared rate-limit store is unavailable (RATE_LIMIT_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/materials/{id}": {
+      "get": {
+        "summary": "Get one material",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Material id"
+            },
+            "required": true,
+            "description": "Material id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The material.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Material"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No material with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a material and its extracted text",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Material id"
+            },
+            "required": true,
+            "description": "Material id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The material and its text were deleted."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No material with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/materials/{id}/summary": {
+      "get": {
+        "summary": "Get the latest summary of a material",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Material id"
+            },
+            "required": true,
+            "description": "Material id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The latest summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such material for the signed-in user, or it has no summary yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Write a new summary of a material, replacing the previous one",
+        "description": "Needs a verified email. Reads only the stored text of the material. A long document is split into sections that are summarized one by one and then combined; sectionCount says how many. The request returns when the summary is complete. If any section fails after one retry of a timeout or outage, nothing is saved and the previous summary (if any) stays. The whole job is checked against the user quota and the global budget before it starts.",
+        "tags": [
+          "materials"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Material id"
+            },
+            "required": true,
+            "description": "Material id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The new summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The anti-CSRF header is missing, or the email is not verified (code EMAIL_NOT_VERIFIED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No material with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The material is still processing, failed, or has no text (MATERIAL_NOT_READY), or a summary is already being written (SUMMARY_IN_PROGRESS).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The document needs more sections than the configured limit (DOCUMENT_TOO_LARGE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily AI allowance used (AI_QUOTA_EXCEEDED), the provider is rate limiting (AI_RATE_LIMITED), or the user already has AI requests running (REQUEST_IN_PROGRESS).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider rejected the server credentials (AI_AUTH_FAILED), sent an unusable answer (AI_BAD_RESPONSE), or failed (AI_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AI is not configured (AI_NOT_CONFIGURED), the global budget is used (AI_BUDGET_PAUSED), or the provider account is out of credit (AI_QUOTA_EXHAUSTED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The provider did not answer in time (AI_TIMEOUT).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "summary": "List the signed-in user's conversations, most recently active first",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The conversations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Start a new, empty conversation",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConversationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new conversation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}": {
+      "patch": {
+        "summary": "Rename a conversation",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "required": true,
+            "description": "Conversation id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameConversationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The renamed conversation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversation with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a conversation and its messages",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "required": true,
+            "description": "Conversation id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The conversation was deleted."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversation with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}/messages": {
+      "get": {
+        "summary": "Read the messages of a conversation, oldest first",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "required": true,
+            "description": "Conversation id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The messages.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversation with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Clear a conversation: remove its messages but keep the conversation",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "required": true,
+            "description": "Conversation id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The messages were removed."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversation with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Send a message and get the assistant's reply",
+        "description": "Needs a verified email. The message is stored, the reply is generated, and both are returned. If generating fails the message stays stored and no reply is saved: send the same idempotencyKey again to retry it. Repeating the key of an answered message returns the stored answer without calling the provider. Limits, the configuration check, and the global budget are checked before anything is stored.",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Conversation id"
+            },
+            "required": true,
+            "description": "Conversation id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The stored user message and the assistant reply.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty, whitespace-only, or over-long message, or an invalid idempotency key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The anti-CSRF header is missing, or the email is not verified (code EMAIL_NOT_VERIFIED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversation with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The conversation is full (CONVERSATION_FULL) or a reply is already being written (CONVERSATION_BUSY).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily AI allowance used (AI_QUOTA_EXCEEDED, with details.resetsAt and Retry-After), the provider is rate limiting (AI_RATE_LIMITED), or the user already has AI requests running (REQUEST_IN_PROGRESS).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider rejected the server credentials (AI_AUTH_FAILED), sent an unusable answer (AI_BAD_RESPONSE), or failed (AI_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AI is not configured (AI_NOT_CONFIGURED), the global budget is used (AI_BUDGET_PAUSED), or the provider account is out of credit (AI_QUOTA_EXHAUSTED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The provider did not answer in time (AI_TIMEOUT).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes": {
+      "post": {
+        "summary": "Generate a quiz from a topic or a ready material",
+        "description": "Needs a verified email. Every question the AI writes is checked against a strict schema; invalid ones are discarded, and one more request is made for any shortfall. If the requested number still cannot be reached the request fails with AI_BAD_RESPONSE and nothing is stored. A material quiz uses only the leading part of the material; sourcePartial says when the material is longer. The response never includes correct answers or explanations.",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuizRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new quiz, without answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quiz"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid configuration: no question type, a count outside 1 to 20, or neither (or both of) topic and materialId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The anti-CSRF header is missing, or the email is not verified (code EMAIL_NOT_VERIFIED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No material with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The material is still processing, failed, or has no text (MATERIAL_NOT_READY). No provider call is made.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily AI allowance used (AI_QUOTA_EXCEEDED), the provider is rate limiting (AI_RATE_LIMITED), or the user already has AI requests running (REQUEST_IN_PROGRESS).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider rejected the server credentials (AI_AUTH_FAILED), sent an unusable answer (AI_BAD_RESPONSE), or failed (AI_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AI is not configured (AI_NOT_CONFIGURED), the global budget is used (AI_BUDGET_PAUSED), or the provider account is out of credit (AI_QUOTA_EXHAUSTED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The provider did not answer in time (AI_TIMEOUT).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the signed-in user's quizzes, newest first",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The quizzes with their attempt counts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}": {
+      "get": {
+        "summary": "Get a quiz with its questions, without answers",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Quiz id"
+            },
+            "required": true,
+            "description": "Quiz id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The quiz.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quiz"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No quiz with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quizzes/{id}/attempts": {
+      "post": {
+        "summary": "Start an attempt, or resume the unsubmitted one",
+        "description": "Starting after a submitted attempt (a retake) creates a new empty attempt and keeps the old one in history.",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Quiz id"
+            },
+            "required": true,
+            "description": "Quiz id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The existing unsubmitted attempt, with its saved answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new empty attempt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No quiz with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the attempts of a quiz, newest first",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Quiz id"
+            },
+            "required": true,
+            "description": "Quiz id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The attempts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No quiz with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/{id}": {
+      "get": {
+        "summary": "Get an attempt: saved answers while open, results with correct answers once submitted",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Attempt id"
+            },
+            "required": true,
+            "description": "Attempt id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The attempt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No attempt with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/{id}/answers": {
+      "put": {
+        "summary": "Save draft answers so progress survives a reload",
+        "description": "Only the listed questions change; null clears an answer.",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Attempt id"
+            },
+            "required": true,
+            "description": "Attempt id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAnswersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The attempt with its saved answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown question, or an answer of the wrong kind for its question.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No attempt with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The attempt was already submitted (ATTEMPT_LOCKED); nothing changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/{id}/submit": {
+      "post": {
+        "summary": "Submit the attempt: lock the answers and score them on the server",
+        "description": "Multiple-choice and true/false answers are compared exactly. Short answers are compared after normalization (case, spacing and punctuation ignored) to the accepted answers. A blank question is incorrect. Answers in the body are saved first. The response carries the score, the correct answers and the explanations.",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Attempt id"
+            },
+            "required": true,
+            "description": "Attempt id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAttemptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The submitted attempt with results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown question, or an answer of the wrong kind for its question.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No attempt with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The attempt was already submitted (ATTEMPT_LOCKED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/{id}/answers/{questionId}/review": {
+      "post": {
+        "summary": "Ask the AI to review an incorrectly graded short answer",
+        "description": "Needs a verified email and counts toward the AI allowance. The review is stored on the answer and shown as AI-judged; it never changes the score. Asking again returns the stored review without another provider call.",
+        "tags": [
+          "quizzes"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Attempt id"
+            },
+            "required": true,
+            "description": "Attempt id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Question id"
+            },
+            "required": true,
+            "description": "Question id",
+            "name": "questionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The question result including the AI review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The anti-CSRF header is missing, or the email is not verified (code EMAIL_NOT_VERIFIED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such attempt or question for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Not allowed (REVIEW_NOT_ALLOWED): the attempt is not submitted, the question is not a short answer, it is blank, or it was graded correct.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily AI allowance used (AI_QUOTA_EXCEEDED), the provider is rate limiting (AI_RATE_LIMITED), or the user already has AI requests running (REQUEST_IN_PROGRESS).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider rejected the server credentials (AI_AUTH_FAILED), sent an unusable answer (AI_BAD_RESPONSE), or failed (AI_UNAVAILABLE).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "AI is not configured (AI_NOT_CONFIGURED), the global budget is used (AI_BUDGET_PAUSED), or the provider account is out of credit (AI_QUOTA_EXHAUSTED).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The provider did not answer in time (AI_TIMEOUT).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "summary": "The signed-in user's settings",
+        "description": "A user who has not saved anything gets the defaults with saved false.",
+        "tags": [
+          "settings"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change settings",
+        "description": "Only the fields sent change, atomically. The time zone must be a known IANA name and is stored under its canonical spelling. It decides what \"today\" means: overdue tasks, analytics day boundaries and the planner week all follow it. An invalid value changes nothing.",
+        "tags": [
+          "settings"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The settings now in effect.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown theme, time zone or week start, or nothing to change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "get": {
+        "summary": "List study sessions that overlap a time range, earliest first",
+        "description": "The range is at most 100 days. Sessions with the same start are ordered by end and then id, so the order never changes between requests.",
+        "tags": [
+          "planner"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The sessions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySessionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid or too long range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Schedule a study session",
+        "description": "Times are UTC instants. The end must be after the start and at most 12 hours later. A linked material or task must belong to the user.",
+        "tags": [
+          "planner"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid title, date or time, an end that is not after the start, a session longer than 12 hours, or a link that is not the user's.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}": {
+      "get": {
+        "summary": "Get one study session",
+        "tags": [
+          "planner"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Study session id"
+            },
+            "required": true,
+            "description": "Study session id",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No study session with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit a study session",
+        "description": "The start and end are validated together with the values that are not being changed.",
+        "tags": [
+          "planner"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Study session id"
+            },
+            "required": true,
+            "description": "Study session id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid values; nothing changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No study session with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a study session",
+        "tags": [
+          "planner"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Study session id"
+            },
+            "required": true,
+            "description": "Study session id",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LearnFlow"
+              ],
+              "description": "Required on every POST, PUT, PATCH, and DELETE request."
+            },
+            "required": true,
+            "description": "Required on every POST, PUT, PATCH, and DELETE request.",
+            "name": "X-Requested-With",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The session was deleted."
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing anti-CSRF header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No study session with this id for the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics": {
+      "get": {
+        "summary": "Task, quiz and study-time statistics for the last 7, 30 or 90 days",
+        "description": "Derived from the user's own data only. Days are calendar days in the user's time zone and the range ends with today. Every series has one entry per day, zero-filled. Quiz figures use submitted attempts only. The completion rate is completed divided by activeInRange, and 0 when that is 0.",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d"
+              ],
+              "default": "7d"
+            },
+            "required": false,
+            "name": "range",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Analytics"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activity": {
+      "get": {
+        "summary": "The latest things the user did, newest first",
+        "description": "Completed tasks, submitted quizzes, uploaded materials and scheduled sessions: real events only.",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The events.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

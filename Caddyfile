@@ -1,0 +1,11 @@
+# Standalone default: serves the static client on port 80 without TLS or an API proxy.
+# Production uses deploy/Caddyfile from the meta repository instead.
+{
+	auto_https off
+}
+
+:80 {
+	root * /srv
+	try_files {path} /index.html
+	file_server
+}
